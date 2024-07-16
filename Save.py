@@ -4,11 +4,26 @@ import os
 
 # each format class MUST have 2 overarching functions : initialise and save_files
 
-class csv():
-    def __init__(self,stonks,keys,directory) -> None:
+class Format():
+    #abstract class
+    def __init__(self,stonks,keys,directory,data_type,date) -> None:
         self.stonks = stonks
-        self.directory = directory
+        self.dir = directory
         self.keys = keys
+        self.data_type=data_type
+        self.india_date=date
+    def initialise(self):
+        #abstract 
+        pass
+
+    def save_files(self):
+        #abstract
+        pass
+
+
+class csv(Format):
+    def __init__(self,stonks,keys,directory,data_type,date) -> None:
+        super().__init__(stonks=stonks,keys=keys,directory=directory,data_type=data_type,date=date)
 
     def _initcols(self,file_path):
 
@@ -52,3 +67,5 @@ class csv():
                 f.write(str(message[key])+',')
             f.write(str(india_epoch))
             f.write('\n')
+
+

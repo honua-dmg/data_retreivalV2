@@ -1,7 +1,7 @@
 from fyers_apiv3.FyersWebsocket import data_ws
 import time 
 import datetime as dt
-import os
+
 import Save
 
 
@@ -14,13 +14,15 @@ class _Data():
         self._litemode = False
         self.data_type = None # defined in subclasses
         self.keys = None
-        self.save_mode = save_mode
         if directory == None:
             self.dir = r'/Users/gurusai/data'
         else:
             self.dir = directory
+
         #datetime in YYYY-MM-DD format
         self.india_date = dt.datetime.strftime(dt.datetime.now(dt.UTC) + dt.timedelta(hours=5.5),"%Y-%m-%d")
+        
+
 
 
 
@@ -79,9 +81,9 @@ class Depth(_Data):
                     'ask_size1','ask_size2','ask_size3','ask_size4','ask_size5',
                     'ask_order1','ask_order2','ask_order3','ask_order4','ask_order5']
         self.data_type = 'DepthUpdate'
+        self.save_mode = save_mode(stonks=self.stonks,keys=self.keys,directory=self.dir,data_type=self.data_type,date=self.india_date)
         self.save_mode.initialise()
         
-
 
 class Symbol(_Data):
     def __init__(self,access_token,stonks,directory=None,litemode=False,save_mode=Save.csv):
@@ -91,4 +93,12 @@ class Symbol(_Data):
                         'low_price','high_price', 'lower_ckt', 'upper_ckt', 'open_price', 'prev_close_price', 'ch', 'chp']
         self.data_type = 'SymbolUpdate'
         self._litemode=litemode
+        self.save_mode = save_mode(stonks=self.stonks,keys=self.keys,directory=self.dir,data_type=self.data_type,date=self.india_date)
         self.save_mode.initialise()
+
+def collect(Data_class,auth:str,stonks:list,wait_time:int,save_mode=Save.csv):
+    symbol = Data_class(auth,stonks,save_mode=save_mode)
+    symbol.connect()
+    symbol.subscribe()
+    time.sleep(wait_time)
+    symbol.unsubscribe()

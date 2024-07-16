@@ -123,12 +123,12 @@ class Login():
         #getting auth_code if we did not do it manually
         if not self.auth_code: 
             try:
-                self.auth_code= self.login_and_get_auth(response)               # trying with uc mode in seleniumbase
+                self.auth_code= self._login_and_get_auth(response)               # trying with uc mode in seleniumbase
                 print('auth_code obtained!')
             except Exception:
                 print('shucks login issue occured, we prolly got detected')
                 try:
-                    self.auth_code= self.login_and_get_auth(response,driver_mode=1)     # trying with undected mode in seleniumbase
+                    self.auth_code= self._login_and_get_auth(response,driver_mode=1)     # trying with undected mode in seleniumbase
                     print('auth_code obtained!')
                 except Exception:
                     print('auth code failed to be received')
@@ -160,9 +160,4 @@ class AutoLogin(Login):
                          key=creds['key'],
                          phoneno=creds['phoneno'],
                          TOTPseckey=creds['TOTPseckey'])
-        
 
-# making a function to do everything for me:
-# THIS IS WHAT YOU SHOULD BE USING
-def accesstoken(file_loc,data_type):
-    return AutoLogin(file_loc=file_loc,data_type=data_type).get_access_token()
