@@ -1,5 +1,6 @@
 import datetime as dt
 import os
+import h5py as h
 
 
 # each format class MUST have 2 overarching functions : initialise and save_files
@@ -69,3 +70,40 @@ class csv(Format):
             f.write('\n')
 
 
+class mdf5(Format):
+    def __init__(self,stonks,keys,directory,data_type,date) -> None:
+        super().__init__(stonks=stonks,keys=keys,directory=directory,data_type=data_type,date=date)
+
+    def append(data,dataset):
+        # ensure the data is properly formatted
+        dataset.reshape((dataset.shape[0]+1,dataset.shape[1]))
+        try:
+            dataset[-1] = data
+        except TypeError:
+            return f"data doesn't match datset shape:{dataset.shape}"
+        
+    def initialise(self):
+        file_name = self.directory + '-'.join(self.india_date.split('-')[:2])
+        
+        
+        with h.File(file_name+'.h5','a') as f:
+            #initialsing master file
+            try:
+                self.append(f['master'],self.india_date.split('-')[2])
+            except Exception: # datset not made yet.
+                f.create_dataset('master',shape=(0,1),maxshape=(None,1))
+                self.append(f['master'],self.india_date.split('-')[2])
+
+            #making stock files:
+            for stonk in self.stonks:
+                exchange,name= stonk.split(':')
+                ticker = name.split('-')[0]
+                try:
+                    f[f'{ticker}/{f["master"].shape[0]}/{exchange}/Depth']
+                    f[f'{ticker}/{f["master"].shape[0]}/{exchange}/Symbol']
+                except Exception:
+                    f.create_dataset(f'{ticker}/{f["master"].shape[0]}/{exchange}/Depth',shape=(0,30),maxshape=(None,30))
+                    f.create_dataset(f'{ticker}/{f["master"].shape[0]}/{exchange}/Symbol',shape=(0,20),maxshape=(None,20))
+
+    def save_files(self):
+        
