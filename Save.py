@@ -99,11 +99,20 @@ class mdf5(Format):
                 exchange,name= stonk.split(':')
                 ticker = name.split('-')[0]
                 try:
-                    f[f'{ticker}/{f["master"].shape[0]}/{exchange}/Depth']
-                    f[f'{ticker}/{f["master"].shape[0]}/{exchange}/Symbol']
+                    f[f'{ticker}/{f["master"].shape[0]}/{exchange}/{self.data_type}']
+                    #f[f'{ticker}/{f["master"].shape[0]}/{exchange}/Symbol']
                 except Exception:
-                    f.create_dataset(f'{ticker}/{f["master"].shape[0]}/{exchange}/Depth',shape=(0,30),maxshape=(None,30))
-                    f.create_dataset(f'{ticker}/{f["master"].shape[0]}/{exchange}/Symbol',shape=(0,20),maxshape=(None,20))
+                    f.create_dataset(f'{ticker}/{f["master"].shape[0]}/{exchange}/Depth',shape=(0,len(self.keys)+1),maxshape=(None,len(self.keys)+1))
+                    #f.create_dataset(f'{ticker}/{f["master"].shape[0]}/{exchange}/Symbol',shape=(0,20),maxshape=(None,20))
 
-    def save_files(self):
-        
+    def save_files(self,message):
+        india_epoch = (dt.datetime.now(dt.UTC) + dt.timedelta(hours=5.5)).timestamp()
+        file_name = self.directory + '-'.join(self.india_date.split('-')[:2])
+        if 'symbol' not in message.keys(): # a message without data
+            return
+        del message['type'] # we don't need it
+        exchange,name= message.pop('symbol').split(':')
+        ticker = name.split('-')[0]
+        with h.File(file_name+'.h5','a') as f:
+            data = [message[key] for key in message].append(india_epoch)
+            self.append(data,f[f'{ticker}/{f["master"].shape[0]}/{exchange}/{self.data_type}'])
