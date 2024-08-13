@@ -37,7 +37,8 @@ class Login():
     for manual intervention, you can use the _generate_response_url and get the authcode manually,set the variable to it and run get_access_token
     """
 
-    def __init__(self,client_id,secret_key, redirect_uri,key=None,phoneno=None,TOTPseckey=None):
+    def __init__(self,client_id,secret_key, redirect_uri,key=None,phoneno=None,TOTPseckey=None,*args,**kwargs):
+        super().__init__()
         self.client_id = client_id
         self.secret_key = secret_key
         self.redirect_uri = redirect_uri
@@ -65,6 +66,7 @@ class Login():
         self.responseurl = self.session.generate_authcode()
         return self.responseurl
     
+
     def _login_and_get_auth(self,response,driver_mode=0):
         """automatically gets auth_code from response url"""
 
@@ -75,12 +77,23 @@ class Login():
             return KeyError('four digit key not provided')
         if self.phoneno == None:
             return KeyError('phoneno not provided')
+        
+
         try:
+            """
             if driver_mode == 0:
-                drive = sb.Driver(uc=True)
+                drive = sb.SB(uc=True)
             elif driver_mode == 1:
                 drive = sb.Driver(undetectable=True)
-            drive.get(response)
+            drive.get(response)"""
+            if driver_mode == 0:
+                drive = sb.Driver(uc=True)  # Initialize BaseCase
+                time.sleep(2)
+                drive.open(response)
+            elif driver_mode == 1:
+                drive = sb.Driver(undetectable=True)  # Initialize BaseCase
+                time.sleep(2)
+                drive.open(response)
             time.sleep(2)
             #clicking on phone number box
             phno = drive.find_element(By.XPATH,'/html/body/section[1]/div[3]/div[3]/form/div[1]/div/input')
@@ -90,7 +103,7 @@ class Login():
 
             #clicking on continue
             drive.find_element(By.XPATH,'/html/body/section[1]/div[3]/div[3]/form/button').click()
-            time.sleep(3)
+            #time.sleep(3)
             #sending TOTP 
             otp = pyotp.TOTP(self.TOTPseckey).now()
             for i in range(1,7):
@@ -98,7 +111,7 @@ class Login():
 
             #pressing continue
             drive.find_element(By.XPATH,'/html/body/section[6]/div[3]/div[3]/form/button').click()
-            time.sleep(3)
+            #time.sleep(3)
             #sending id
             for i in range(1,5):
                 drive.find_element(By.XPATH,f'/html/body/section[8]/div[3]/div[3]/form/div[2]/input[{i}]').send_keys(self.four_digit_key[i-1])
@@ -109,11 +122,12 @@ class Login():
                 drive.find_element(By.XPATH,'/html/body/div/div/div/div/div/div[4]/div/a[2]/span').click()
             except Exception as e:
                 print('no neeed to validate :)')
-            time.sleep(2)
+            #time.sleep(2)
             url = drive.current_url
             return url.split('&')[2].split('=')[1]
         finally:
-            drive.quit()
+            print('yeassss')
+            #drive.quit()
 
     def get_access_token(self):
         # generating response url if not done manually
@@ -125,13 +139,15 @@ class Login():
             try:
                 self.auth_code= self._login_and_get_auth(response)               # trying with uc mode in seleniumbase
                 print('auth_code obtained!')
-            except Exception:
-                print('shucks login issue occured, we prolly got detected')
+            except Exception as e :
+                print(f'shucks login issue occured, we prolly got detected: {e}')
+                print('mode 0 used up')
                 try:
                     self.auth_code= self._login_and_get_auth(response,driver_mode=1)     # trying with undected mode in seleniumbase
                     print('auth_code obtained!')
-                except Exception:
-                    print('auth code failed to be received')
+                except Exception as e:
+                    print(f'auth code failed to be received {e}')
+                    print('mode 1 undetectable=true gone')
                     return NotImplementedError('bro SeleniumBase might be failing you look for alternatives')
 
         # getting access token

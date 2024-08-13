@@ -96,8 +96,8 @@ class Symbol(_Data):
         self.save_mode = save_mode(stonks=self.stonks,keys=self.keys,directory=self.dir,data_type=self.data_type,date=self.india_date)
         self.save_mode.initialise()
 
-def collect(Data_class,auth:str,stonks:list,wait_time:int,save_mode=Save.csv):
-    symbol = Data_class(auth,stonks,save_mode=save_mode)
+def collect(Data_class,auth:str,stonks:list,wait_time:int,save_mode=Save.csv,dir=r'/Users/gurusai/data'):
+    symbol = Data_class(auth,stonks,save_mode=save_mode,directory=dir)
     symbol.connect()
     symbol.subscribe()
     time.sleep(wait_time)
