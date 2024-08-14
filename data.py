@@ -7,6 +7,7 @@ import time
 def accesstoken(file_loc,data_type):
     return gen_token.AutoLogin(file_loc=file_loc,data_type=data_type).get_access_token()
 
+# runs Depth and Symbol Data websockets simultaneously via multiprocessing for a set amount of time. 
 def connect(access_token,stonks,wait_time,save_format=Save.csv,dir=r'/Users/gurusai/programming/STONKS/data_retreival_v2/data'):
     
 
@@ -24,6 +25,7 @@ def connect(access_token,stonks,wait_time,save_format=Save.csv,dir=r'/Users/guru
     dep.join()
     sym.join()
 
+# an all encompassing function that deals with token collection, websocket initiation and saving data
 def collect(file_loc:str,app_name:str,stonks:list,wait_time:int,save_format=Save.csv,dir=r'/Users/gurusai/programming/STONKS/data_retreival_v2/data'):
     access_token = accesstoken(file_loc,app_name)
     connect(access_token,stonks,wait_time,save_format=save_format)

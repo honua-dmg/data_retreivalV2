@@ -72,6 +72,7 @@ class _Data():
     
 
 class Depth(_Data):
+    # a class to collect depth data from fyers 
     def __init__(self,access_token,stonks,directory=None,save_mode = Save.csv):
         super().__init__(access_token=access_token,stonks=stonks,directory=directory,save_mode=save_mode)
         self.keys = ['bid_price1','bid_price2','bid_price3','bid_price4','bid_price5',
@@ -86,6 +87,7 @@ class Depth(_Data):
         
 
 class Symbol(_Data):
+    # a class to collect symbol data from fyers
     def __init__(self,access_token,stonks,directory=None,litemode=False,save_mode=Save.csv):
         super().__init__(access_token=access_token,stonks=stonks,directory=directory,save_mode=Save.csv)
         self.keys =   ['ltp', 'vol_traded_today', 'last_traded_time', 'exch_feed_time', 'bid_size', 'ask_size',
@@ -96,6 +98,7 @@ class Symbol(_Data):
         self.save_mode = save_mode(stonks=self.stonks,keys=self.keys,directory=self.dir,data_type=self.data_type,date=self.india_date)
         self.save_mode.initialise()
 
+# used while multiprocessing to run both depth and symbol websockets simultaneously
 def collect(Data_class,auth:str,stonks:list,wait_time:int,save_mode=Save.csv,dir=r'/Users/gurusai/data'):
     symbol = Data_class(auth,stonks,save_mode=save_mode,directory=dir)
     symbol.connect()
