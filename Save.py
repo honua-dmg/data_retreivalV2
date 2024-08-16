@@ -88,11 +88,11 @@ class hdf5(Format):
 
 
     def initialise(self):
-        # file format ex: YYYY-MM.h5
+        # file format ex: YYYY-MM-Depth.h5
         # dataset locations:
-        # SBIN/1/NSE/Depth
+        # SBIN/1/NSE
         # the 1 refers to the master dataset's corrilated date (assumed it'd make it easier to sort through (lcoated in f['master']) 
-        file_name = rf"{self.dir}/{'-'.join(self.india_date.split('-')[:2])}"+'.h5'
+        file_name = r"{directory}/{date}/{datatype}.h5".format(directory = self.dir,date = '-'.join(self.india_date.split('-')[:2]),datatype=self.data_type.split('U')[0])
         day = self.india_date.split('-')[2]
         
         with h.File(file_name,'a') as f:
@@ -105,28 +105,30 @@ class hdf5(Format):
             if master.shape[0] == 0:
                 self.append(self.india_date.split('-')[2],f['master'])
             
-            if not f['master'][-1] == float(self.india_date.split('-')[2]):
+            if  f['master'][-1] != float(self.india_date.split('-')[2]):
                 self.append(self.india_date.split('-')[2],f['master'])
 
             #making stock files:
             for stonk in self.stonks:
                 exchange,name= stonk.split(':')
                 ticker = name.split('-')[0]
+                dataset_loc = f'{ticker}/{f["master"].shape[0]}/{exchange}'
                 try:
-                    f[f'{ticker}/{f["master"].shape[0]}/{exchange}/{self.data_type.split('U')[0]}']
+                    f[dataset_loc]
                     #f[f'{ticker}/{f["master"].shape[0]}/{exchange}/Symbol']
                 except Exception:
-                    dataset = f.create_dataset(f'{ticker}/{f["master"].shape[0]}/{exchange}/{self.data_type.split('U')[0]}',
+                    dataset = f.create_dataset(dataset_loc,
                                                shape=(0,len(self.keys)+1),
                                                maxshape=(None,len(self.keys)+1),
                                                compression='lzf') # to make the files as small as possible 
-                    print(f'{ticker}/{f["master"].shape[0]}/{exchange}/{self.data_type.split('U')[0]}')
+                        #    SBIN   /    Day-id            / NSE      / Depth
+                    print(dataset_loc)
                     dataset.attrs['columns'] = self.keys + ['time']
                     #f.create_dataset(f'{ticker}/{f["master"].shape[0]}/{exchange}/Symbol',shape=(0,20),maxshape=(None,20))
 
     def save_files(self,message):
         india_epoch = (dt.datetime.now(dt.UTC) + dt.timedelta(hours=5.5)).timestamp()
-        file_name = rf"{self.dir}/{'-'.join(self.india_date.split('-')[:2])}"+'.h5'
+        file_name = r"{}/{}/{}.h5".format(self.dir,'-'.join(self.india_date.split('-')[:2]),self.data_type.split('U')[0])
         if 'symbol' not in message.keys(): # a message without data
             return
         
@@ -136,5 +138,5 @@ class hdf5(Format):
         with h.File(file_name,'a') as f:
             data = [message[key] for key in message]+ [india_epoch]
             print(data)
-            self.append(data,f[f'{ticker}/{f["master"].shape[0]}/{exchange}/{self.data_type.split('U')[0]}'])
-            print('saved to:'+f'{ticker}/{f["master"].shape[0]}/{exchange}/{self.data_type.split('U')[0]}')
+            self.append(data,f[f'{ticker}/{f["master"].shape[0]}/{exchange}'])
+            print('saved to:'+f'{ticker}/{f["master"].shape[0]}/{exchange}')
