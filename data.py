@@ -3,6 +3,20 @@ import Save
 import gen_token
 import multiprocessing
 import time
+ 
+def get_stonks(file):
+    stonks_list = []
+    with open(file,'r') as f:
+        line = f.readline()
+        while line != 'stonks:\n':
+            line = f.readline()
+            pass
+        line = f.readline()
+        while line != '':
+            stonks_list.extend(line.split(',')[:2])
+            #print(line.split(',')[:2])
+            line=f.readline()
+    return stonks_list
 
 def accesstoken(file_loc,data_type):
     return gen_token.AutoLogin(file_loc=file_loc,data_type=data_type).get_access_token()
@@ -26,6 +40,7 @@ def connect(access_token,stonks,wait_time,save_format=Save.csv,dir=r'/Users/guru
     sym.join()
 
 # an all encompassing function that deals with token collection, websocket initiation and saving data
-def collect(file_loc:str,app_name:str,stonks:list,wait_time:int,save_format=Save.csv,dir=r'/Users/gurusai/programming/STONKS/data_retreival_v2/data'):
+def collect(file_loc:str,app_name:str,wait_time:int,save_format=Save.csv,dir=r'/Users/gurusai/programming/STONKS/data_retreival_v2/data'):
     access_token = accesstoken(file_loc,app_name)
+    stonks = get_stonks('secrets.txt')
     connect(access_token,stonks,wait_time,save_format=save_format)

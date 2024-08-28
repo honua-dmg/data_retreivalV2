@@ -1,7 +1,7 @@
 import datetime as dt
 import os
 import h5py as h
-
+import numpy as np
 
 # each format class MUST have 2 overarching functions : initialise and save_files
 
@@ -88,11 +88,17 @@ class hdf5(Format):
 
 
     def initialise(self):
+        """
+        creates 2 files if not already made for the given month.
+        Depth and Symbol
+        the dataset location inside said file is TICKER/Day-id/MARKET
+        
+        """
         # file format ex: YYYY-MM-Depth.h5
         # dataset locations:
         # SBIN/1/NSE
         # the 1 refers to the master dataset's corrilated date (assumed it'd make it easier to sort through (lcoated in f['master']) 
-        file_name = r"{directory}/{date}/{datatype}.h5".format(directory = self.dir,date = '-'.join(self.india_date.split('-')[:2]),datatype=self.data_type.split('U')[0])
+        file_name = "{directory}/{date}-{datatype}.h5".format(directory = self.dir,date = '-'.join(self.india_date.split('-')[:2]),datatype=self.data_type.split('U')[0])
         day = self.india_date.split('-')[2]
         
         with h.File(file_name,'a') as f:
@@ -120,7 +126,8 @@ class hdf5(Format):
                     dataset = f.create_dataset(dataset_loc,
                                                shape=(0,len(self.keys)+1),
                                                maxshape=(None,len(self.keys)+1),
-                                               compression='lzf') # to make the files as small as possible 
+                                               compression='lzf',# to make the files as small as possible 
+                                               )#dtype=np.float64) 
                         #    SBIN   /    Day-id            / NSE      / Depth
                     print(dataset_loc)
                     dataset.attrs['columns'] = self.keys + ['time']
@@ -128,7 +135,7 @@ class hdf5(Format):
 
     def save_files(self,message):
         india_epoch = (dt.datetime.now(dt.UTC) + dt.timedelta(hours=5.5)).timestamp()
-        file_name = r"{}/{}/{}.h5".format(self.dir,'-'.join(self.india_date.split('-')[:2]),self.data_type.split('U')[0])
+        file_name = r"{}/{}-{}.h5".format(self.dir,'-'.join(self.india_date.split('-')[:2]),self.data_type.split('U')[0])
         if 'symbol' not in message.keys(): # a message without data
             return
         
@@ -136,7 +143,10 @@ class hdf5(Format):
         exchange,name= message.pop('symbol').split(':')
         ticker = name.split('-')[0]
         with h.File(file_name,'a') as f:
-            data = [message[key] for key in message]+ [india_epoch]
-            print(data)
+            f.swmr_mode=True
+            data =[message[key] for key in message]+ [india_epoch]
+            #f.swmr_mode=True
+            #print(data)
             self.append(data,f[f'{ticker}/{f["master"].shape[0]}/{exchange}'])
+            f[f'{ticker}/{f["master"].shape[0]}/{exchange}'].flush()
             print('saved to:'+f'{ticker}/{f["master"].shape[0]}/{exchange}')
