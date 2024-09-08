@@ -2,8 +2,8 @@
 secrets.txt
 
 #testing
-./testing.ipynb
-./testing.py
+./test.ipynb
+./test2.ipynb
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

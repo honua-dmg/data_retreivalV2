@@ -17,6 +17,15 @@ def get_creds(file_loc,data_type):
     args:
         file_loc: location of file
         data_type: (specified in secrets.txt)
+
+        format in secrets.txt:
+        data_type:
+        TOTPseckey = ... ,
+        key = ... ,
+        phoneno = ... ,
+        client_id = ... ,
+        secret_key = ... ,
+        redirect_uri = ... ,
     """
     creds = {}
     with open(file_loc,'r') as f:
